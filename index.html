@@ -264,7 +264,7 @@ input[type=time]{font:inherit;font-weight:650;font-size:17px;color:var(--ink);ba
 
   // sound & notifications
   let ctx=null,soundOK=false,swReg=null;
-  if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').then(r=>swReg=r).catch(()=>{});
+  if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>swReg=r).catch(()=>{});
   function enable(){
     try{ctx=ctx||new(window.AudioContext||window.webkitAudioContext)();ctx.resume();soundOK=true}catch(e){}
     try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}catch(e){}

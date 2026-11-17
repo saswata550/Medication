@@ -1,5 +1,5 @@
 // Minimal service worker: enables installing as an app and showing notifications on mobile.
-const CACHE = 'lara-reminder-v3';
+const CACHE = 'lara-reminder-v4';
 const FILES = ['./', 'index.html', 'manifest.json', 'icon.svg', 'icon-192.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
@@ -7,10 +7,10 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
-// Network first, so updates arrive; cache as offline fallback.
+// Network first (revalidating the HTTP cache), so updates arrive immediately; cache as offline fallback.
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  e.respondWith(fetch(e.request).then(r => {
+  e.respondWith(fetch(e.request, {cache: 'no-cache'}).then(r => {
     const copy = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); return r;
   }).catch(() => caches.match(e.request)));
 });
