@@ -1,5 +1,5 @@
 // Minimal service worker: enables installing as an app and showing notifications on mobile.
-const CACHE = 'lara-reminder-v2';
+const CACHE = 'lara-reminder-v3';
 const FILES = ['./', 'index.html', 'manifest.json', 'icon.svg', 'icon-192.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

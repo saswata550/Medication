@@ -1,11 +1,11 @@
 # Medication
 
-A small reminder web app for two daily doses, after breakfast and after lunch.
+A small, installable reminder web app for two daily doses, after breakfast and after lunch.
 
 - **Gets more insistent** the longer a dose isn't marked as taken. You can choose how persistent it is: gentle, normal or annoying.
 - **Snooze** for 10, 30 or 60 minutes.
-- **"Hab gerade gegessen"** reminds you a set number of minutes after a meal, whatever the clock says.
-- **"Heute ist anders"** moves or skips a dose for today only.
+- **After-meal reminder:** "Gegessen · in 15 Min erinnern" sets the next reminder relative to the meal instead of a fixed time.
+- **"Heute anpassen":** change or skip a dose for today only.
 - **Music link** (Spotify/YouTube) appears with the reminder.
 - **7-day history.** All data stays in the browser on that device (localStorage).
 
