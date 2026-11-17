@@ -107,7 +107,6 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none;pad
 .seg3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .ghost{height:48px;border-radius:14px;background:var(--surface2);font-weight:650;font-size:15px}
 .ghost:active{background:var(--line)}
-.musiclink{display:flex;align-items:center;justify-content:center;gap:8px;height:44px;margin-top:10px;border-radius:14px;color:var(--sky);font-weight:650;text-decoration:none;background:color-mix(in oklab,var(--sky) 12%,var(--surface))}
 
 /* sheets */
 .scrim{position:fixed;inset:0;background:rgba(10,12,30,.4);opacity:0;pointer-events:none;transition:opacity .3s;z-index:40}
@@ -125,7 +124,6 @@ button{font:inherit;color:inherit;cursor:pointer;border:none;background:none;pad
 .item .sm{display:block;font-size:13px;color:var(--muted);font-weight:500}
 .glabel{font-size:14px;font-weight:650;color:var(--muted);margin:18px 4px 8px}
 input[type=time]{font:inherit;font-weight:650;font-size:17px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-variant-numeric:tabular-nums}
-input[type=url]{width:100%;font:inherit;color:var(--ink);background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .switch{position:relative;width:52px;height:32px;flex:none}
 .switch input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer;z-index:1}
 .switch span{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:background .25s}
@@ -212,9 +210,6 @@ input[type=url]{width:100%;font:inherit;color:var(--ink);background:var(--surfac
   <div class="glabel">Wie hartnäckig?</div>
   <div class="seg" id="segNag"></div>
 
-  <div class="glabel">Musik zur Erinnerung</div>
-  <input type="url" id="music" placeholder="Spotify- oder YouTube-Link einfügen" inputmode="url">
-
   <p class="foot">Erinnerungen kommen, solange die App offen ist, auch im Hintergrund. Deine Daten bleiben nur auf diesem Gerät.</p>
   <button class="big done-btn" data-close>Fertig</button>
 </div>
@@ -237,7 +232,7 @@ input[type=url]{width:100%;font:inherit;color:var(--ink);background:var(--surfac
   let mem={};
   try{mem=JSON.parse(localStorage.getItem(KEY))||JSON.parse(localStorage.getItem('lara-reminder-v1'))||{}}catch(e){}
   mem.times=mem.times||{};mem.log=mem.log||{};mem.snooze=mem.snooze||{};mem.over=mem.over||{};
-  mem.mealDelay=mem.mealDelay||15;mem.nag=mem.nag||'normal';mem.music=mem.music||'';
+  mem.mealDelay=mem.mealDelay||15;mem.nag=mem.nag||'normal';
   const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(mem))}catch(e){}};
 
   const pad=n=>String(n).padStart(2,'0');
@@ -378,8 +373,7 @@ input[type=url]{width:100%;font:inherit;color:var(--ink);background:var(--surfac
     if(st.k==='due'){
       title=TITLES[st.lvl];sub=d.label+(st.mins>=1?' · seit '+Math.floor(st.mins)+' Min':'');
       body='<button class="big" data-a="take">'+CHECK+' Genommen</button>'+
-        '<div class="seg3"><button class="ghost" data-m="10">+10 Min</button><button class="ghost" data-m="30">+30 Min</button><button class="ghost" data-m="60">+1 Std</button></div>'+
-        (mem.music?'<a class="musiclink" href="'+mem.music.replace(/["<>]/g,'')+'" target="_blank" rel="noopener">🎵 Musik abspielen</a>':'');
+        '<div class="seg3"><button class="ghost" data-m="10">+10 Min</button><button class="ghost" data-m="30">+30 Min</button><button class="ghost" data-m="60">+1 Std</button></div>';
     }else if(st.k==='snz'){
       title='Erinnerung um '+hm(st.s);sub=d.label+' · in '+rel(st.s);
       body='<button class="big alt" data-a="take">Schon genommen</button>';
@@ -449,8 +443,6 @@ input[type=url]{width:100%;font:inherit;color:var(--ink);background:var(--surfac
     });
     seg(document.getElementById('segDelay'),[[10,'10 Min'],[15,'15 Min'],[20,'20 Min'],[30,'30 Min']],mem.mealDelay,v=>{mem.mealDelay=v;save();render()});
     seg(document.getElementById('segNag'),Object.keys(NAG).map(k=>[k,NAGNAMES[k]]),mem.nag,v=>{mem.nag=v;save();render()});
-    const mu=document.getElementById('music');mu.value=mem.music;
-    mu.onchange=()=>{const v=mu.value.trim();mem.music=/^https?:\/\//.test(v)?v:'';mu.value=mem.music;save();render()};
   }
 
   (()=>{const cut=dk(new Date(Date.now()-14*864e5));Object.keys(mem.over).forEach(k=>{if(k<cut)delete mem.over[k]});save()})();
