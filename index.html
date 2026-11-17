@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f1ea">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Erinnerung">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Laras Erinnerung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f1ea; --card:#fffdf9; --ink:#2b2622; --muted:#7b7068; --line:#e7ddd1;
+    --accent:#c4683f; --accent-soft:#f6e3d8; --ok:#4f8a5b; --ok-soft:#e1efe3; --warn:#b5822a; --warn-soft:#f7ecd4;
+    --alarm:#b8322a; --alarm-soft:#f9dcd8;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;line-height:1.45}
+  body.lvl3{background:#fbe9e5}
+  main{max-width:460px;margin:0 auto;padding:calc(24px + env(safe-area-inset-top)) 18px calc(60px + env(safe-area-inset-bottom))}
+  h1{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:30px;margin:0 0 2px}
+  h2{font-family:Fraunces,Georgia,serif;font-weight:500;font-size:18px;margin:0 0 10px}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:15px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:14px;transition:box-shadow .2s,border-color .2s}
+  .card.l1{border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+  .card.l2{border-color:var(--accent);animation:pulse 1.4s ease-in-out infinite}
+  .card.l3{border-color:var(--alarm);background:#fff8f6;animation:pulse3 .8s ease-in-out infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 4px var(--accent-soft)}50%{box-shadow:0 0 0 10px var(--accent-soft)}}
+  @keyframes pulse3{0%,100%{box-shadow:0 0 0 5px var(--alarm-soft)}50%{box-shadow:0 0 0 14px var(--alarm-soft)}}
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .label{font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:500}
+  .time{font-size:14px;color:var(--muted)}
+  .pill{font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)}
+  .pill.wait,.pill.skip{background:#f0ebe4;color:var(--muted)}
+  .pill.due{background:var(--accent-soft);color:var(--accent)}
+  .pill.due3{background:var(--alarm);color:#fff}
+  .pill.snz{background:var(--warn-soft);color:var(--warn)}
+  .msg{margin:12px 0 0;font-size:15px}
+  .msg.big{font-size:19px;font-weight:600;color:var(--alarm)}
+  .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+  button,.btnlink{font:inherit;font-weight:600;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:11px 14px;cursor:pointer;min-height:44px;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+  button:active{transform:scale(.98)}
+  button.primary{background:var(--ok);border-color:var(--ok);color:#fff;flex:1 1 100%;font-size:17px}
+  button.snooze{flex:1}
+  button.soft{background:var(--accent-soft);border-color:var(--accent-soft);color:var(--accent);flex:1 1 100%}
+  button.link{border:none;background:none;color:var(--muted);font-weight:500;padding:6px 0;min-height:0;text-decoration:underline}
+  .btnlink{flex:1 1 100%;background:#f3eefc;border-color:#e6def7;color:#5b4691}
+  .hist{display:flex;gap:6px;margin-top:6px}
+  .day{flex:1;text-align:center;font-size:12px;color:var(--muted)}
+  .dots{display:flex;justify-content:center;gap:3px;margin-top:4px}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--line)}
+  .dot.on{background:var(--ok)} .dot.sk{background:#d7cfc5;outline:1.5px dashed #b9ad9f;outline-offset:-1px}
+  .note{font-size:13px;color:var(--muted);margin-top:18px}
+  .bar{display:none;background:var(--warn-soft);border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:14px}
+  .bar button{margin-top:8px;min-height:36px;padding:6px 12px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px 18px;margin-bottom:14px}
+  summary{cursor:pointer;font-family:Fraunces,Georgia,serif;font-size:18px;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"＋";float:right;color:var(--muted)}
+  details[open] summary::after{content:"－"}
+  .field{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;font-size:15px}
+  .field input[type=time],.field input[type=url],.field select{font:inherit;color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:#fff}
+  .field input[type=url]{flex:1;min-width:0}
+  .help{font-size:13px;color:var(--muted);margin:6px 0 0}
+  .toggle{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+  .chip{display:inline-block;font-size:12px;font-weight:600;color:var(--warn);background:var(--warn-soft);border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Hallo Lara 💛</h1>
+  <p class="sub" id="today"></p>
+
+  <div class="bar" id="soundBar">
+    Einmal tippen, damit die Erinnerung Ton &amp; Hinweise nutzen darf.
+    <br><button id="enableSound">Ton &amp; Hinweise aktivieren</button>
+  </div>
+
+  <div id="doses"></div>
+
+  <details id="todayBox">
+    <summary>Heute ist anders</summary>
+    <p class="help">Nur für heute: Zeit verschieben oder eine Einnahme auslassen. Morgen gilt wieder der normale Plan.</p>
+    <div id="todayFields"></div>
+    <button class="link" id="resetToday" style="margin-top:10px">Heute zurücksetzen</button>
+  </details>
+
+  <details>
+    <summary>Einstellungen</summary>
+    <div id="planFields"></div>
+    <div class="field"><span>Nach dem Essen erinnern in</span>
+      <select id="mealDelay"><option value="10">10 Min</option><option value="15">15 Min</option><option value="20">20 Min</option><option value="30">30 Min</option></select>
+    </div>
+    <div class="field"><span>Hartnäckigkeit</span>
+      <select id="nag"><option value="gentle">sanft</option><option value="normal">normal</option><option value="max">nervig 😤</option></select>
+    </div>
+    <div class="field"><span>🎵</span><input type="url" id="music" placeholder="Spotify- oder YouTube-Link"></div>
+    <p class="help">Der Link erscheint als Button, sobald eine Erinnerung fällig ist.</p>
+  </details>
+
+  <div class="card">
+    <h2>Letzte 7 Tage</h2>
+    <div class="hist" id="hist"></div>
+  </div>
+
+  <p class="note">Erinnerungen kommen, solange diese Seite offen ist (auch im Hintergrund-Tab oder als App auf dem Home-Bildschirm). Alles bleibt nur auf diesem Gerät.</p>
+</main>
+
+<script>
+(function(){
+  const DOSES=[
+    {id:'morning',label:'Nach dem Frühstück',def:'08:30',meal:'Frühstück'},
+    {id:'lunch',label:'Nach dem Mittagessen',def:'13:30',meal:'Mittagessen'}
+  ];
+  // escalation: [minutes overdue threshold, repeat every N min] per profile
+  const NAG={
+    gentle:[[0,10],[30,5],[90,3]],
+    normal:[[0,5],[15,2],[40,1]],
+    max:[[0,3],[10,1],[25,0.5]]
+  };
+  const LINES=[
+    ['Zeit für dein Medikament 💊','Hast du es schon genommen?'],
+    ['Hey 👀 noch nicht genommen?','Kurz aufstehen, nehmen, fertig.'],
+    ['LARA!! 🚨','MEDIKAMENT. JETZT. Bitte 🙏']
+  ];
+
+  const KEY='lara-reminder-v2';
+  let mem={};
+  try{mem=JSON.parse(localStorage.getItem(KEY))||JSON.parse(localStorage.getItem('lara-reminder-v1'))||{}}catch(e){}
+  mem.times=mem.times||{}; mem.log=mem.log||{}; mem.snooze=mem.snooze||{}; mem.over=mem.over||{};
+  mem.mealDelay=mem.mealDelay||15; mem.nag=mem.nag||'normal'; mem.music=mem.music||'';
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(mem))}catch(e){}}
+
+  const pad=n=>String(n).padStart(2,'0');
+  const dk=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+  const hm=ms=>{const d=new Date(ms);return pad(d.getHours())+':'+pad(d.getMinutes())};
+  const planTime=id=>mem.times[id]||DOSES.find(d=>d.id===id).def;
+  const over=now=>mem.over[dk(now)]||{};
+  const todayTime=(id,now)=>(over(now).times||{})[id]||planTime(id);
+  const skipped=(id,now)=>!!(over(now).skip||{})[id];
+  function setOver(now,kind,id,val){
+    const k=dk(now);const o=mem.over[k]=mem.over[k]||{};o[kind]=o[kind]||{};
+    if(val===null||val===false) delete o[kind][id]; else o[kind][id]=val;
+    save();
+  }
+  function dueAt(id,now){const [h,m]=todayTime(id,now).split(':').map(Number);const d=new Date(now);d.setHours(h,m,0,0);return d.getTime()}
+  const taken=(id,now)=>(mem.log[dk(now)]||{})[id];
+  function snz(id,now){const s=mem.snooze[id];return s&&s.day===dk(now)?s.until:null}
+
+  function state(id,now){
+    const t=taken(id,now); if(t) return {k:'ok',t};
+    if(skipped(id,now)) return {k:'skip'};
+    const s=snz(id,now), n=now.getTime();
+    if(s&&s>n) return {k:'snz',s};
+    const start=s?Math.max(s,dueAt(id,now)):dueAt(id,now);
+    if(n>=start){
+      const mins=(n-start)/60000;
+      const steps=NAG[mem.nag]; let lvl=0;
+      steps.forEach((st,i)=>{if(mins>=st[0]) lvl=i});
+      return {k:'due',lvl,mins,every:steps[lvl][1]};
+    }
+    return {k:'wait'};
+  }
+  function left(ms){const m=Math.max(0,Math.ceil((ms-Date.now())/60000));return m<60?m+' Min':Math.floor(m/60)+' Std '+(m%60)+' Min'}
+
+  // ---------- sound & notifications ----------
+  let ctx=null, soundOK=false, swReg=null;
+  if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').then(r=>swReg=r).catch(()=>{})}
+  function enableSound(){
+    try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();ctx.resume();soundOK=true}catch(e){}
+    try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().catch(()=>{})}catch(e){}
+    render();
+  }
+  document.getElementById('enableSound').onclick=enableSound;
+  function tone(freqs,vol,gap,len){
+    if(!ctx||!soundOK) return;
+    try{
+      const t0=ctx.currentTime;
+      freqs.forEach((f,i)=>{
+        const o=ctx.createOscillator(),g=ctx.createGain();const t=t0+i*gap;
+        o.type=vol>.3?'square':'sine';o.frequency.value=f;
+        g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.02);g.gain.exponentialRampToValueAtTime(.001,t+len);
+        o.connect(g).connect(ctx.destination);o.start(t);o.stop(t+len+.05);
+      });
+    }catch(e){}
+  }
+  const SOUNDS=[
+    ()=>tone([660,880,990],.2,.25,.35),
+    ()=>tone([880,660,880,660,990],.3,.18,.25),
+    ()=>tone([988,784,988,784,988,784,988,784],.4,.13,.15)
+  ];
+  function notify(title,body){
+    try{navigator.vibrate&&navigator.vibrate([400,150,400,150,400])}catch(e){}
+    try{
+      if(!('Notification' in window)||Notification.permission!=='granted') return;
+      const opt={body,tag:'lara-med',renotify:true,requireInteraction:true,icon:'icon-192.png'};
+      if(swReg&&swReg.showNotification) swReg.showNotification(title,opt);
+      else new Notification(title,opt);
+    }catch(e){}
+  }
+  const lastRing={};
+  function ring(id,st){
+    const n=Date.now();
+    if(lastRing[id]&&n-lastRing[id]<st.every*60000-1000) return;
+    lastRing[id]=n; SOUNDS[st.lvl](); notify(LINES[st.lvl][0],DOSES.find(d=>d.id===id).label);
+  }
+
+  // ---------- actions ----------
+  function markTaken(id){const k=dk(new Date());mem.log[k]=mem.log[k]||{};mem.log[k][id]=Date.now();delete mem.snooze[id];save();render()}
+  function undo(id){const k=dk(new Date());if(mem.log[k])delete mem.log[k][id];save();render()}
+  function snooze(id,min){if(!soundOK)enableSound();const now=new Date();mem.snooze[id]={day:dk(now),until:now.getTime()+min*60000};delete lastRing[id];save();render()}
+  function justAte(id){
+    if(!soundOK)enableSound();
+    const now=new Date();const t=new Date(now.getTime()+mem.mealDelay*60000);
+    if(t.getDate()!==now.getDate()) return;
+    setOver(now,'times',id,hm(t.getTime()));delete mem.snooze[id];delete lastRing[id];save();render();
+  }
+
+  // ---------- render ----------
+  const box=document.getElementById('doses');
+  function render(){
+    const now=new Date();
+    document.getElementById('today').textContent=now.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+    box.innerHTML='';
+    let maxLvl=-1;
+    DOSES.forEach(d=>{
+      const st=state(d.id,now);
+      const c=document.createElement('div');
+      c.className='card'+(st.k==='due'?' l'+(st.lvl+1):'');
+      const moved=(over(now).times||{})[d.id];
+      let pill,msg='',btns='',big=false;
+      if(st.k==='ok'){pill=['ok','Genommen ✓'];msg='Erledigt um '+hm(st.t)+'. Super! 🌿';btns='<button class="link" data-a="undo">Rückgängig</button>'}
+      else if(st.k==='skip'){pill=['skip','Heute ausgelassen'];msg='Für heute ausgelassen.';btns='<button class="link" data-a="unskip">Doch erinnern</button>'}
+      else{
+        if(st.k==='wait'){
+          pill=['wait','Später'];
+          msg='Erinnerung um '+todayTime(d.id,now)+' (in '+left(dueAt(d.id,now))+').';
+          btns='<button class="soft" data-a="ate">🍽️ Hab gerade '+d.meal+' gegessen</button><button class="primary" data-a="take" style="background:#fff;color:var(--ok)">Schon genommen ✓</button>';
+        }
+        if(st.k==='due'){
+          maxLvl=Math.max(maxLvl,st.lvl);ring(d.id,st);
+          pill=st.lvl===2?['due3','🚨 Überfällig']:['due','Jetzt fällig'];
+          msg=LINES[st.lvl][1];big=st.lvl===2;
+          if(st.mins>=1) msg+=' <span class="chip">seit '+Math.floor(st.mins)+' Min</span>';
+          btns='<button class="primary" data-a="take">Genommen ✓</button><button class="snooze" data-a="s" data-m="10">+10 Min</button><button class="snooze" data-a="s" data-m="30">+30 Min</button><button class="snooze" data-a="s" data-m="60">+1 Std</button>';
+          if(mem.music) btns+='<a class="btnlink" href="'+mem.music.replace(/["<>]/g,'')+'" target="_blank" rel="noopener">🎵 Deine Musik</a>';
+        }
+        if(st.k==='snz'){
+          pill=['snz','Snooze'];
+          msg='Ich erinnere dich wieder um '+hm(st.s)+' (in '+left(st.s)+').';
+          btns='<button class="primary" data-a="take">Doch schon genommen ✓</button>';
+        }
+      }
+      c.innerHTML='<div class="row"><div><div class="label">'+d.label+'</div><div class="time">'+(moved?'heute '+moved+' <span class="chip">verschoben</span>':'um '+planTime(d.id))+'</div></div><span class="pill '+pill[0]+'">'+pill[1]+'</span></div><p class="msg'+(big?' big':'')+'">'+msg+'</p><div class="btns">'+btns+'</div>';
+      c.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+        const a=b.dataset.a;
+        if(a==='take')markTaken(d.id);
+        else if(a==='undo')undo(d.id);
+        else if(a==='ate')justAte(d.id);
+        else if(a==='unskip'){setOver(new Date(),'skip',d.id,null);render()}
+        else snooze(d.id,+b.dataset.m);
+      });
+      box.appendChild(c);
+    });
+    document.body.classList.toggle('lvl3',maxLvl===2);
+    document.title=(maxLvl>=0?['💊 ','👀 ','🚨 '][maxLvl]+'Medikament! · ':'')+'Laras Erinnerung';
+    document.getElementById('soundBar').style.display=soundOK?'none':'block';
+    renderToday(now);renderHist(now);
+  }
+
+  function renderToday(now){
+    const f=document.getElementById('todayFields');
+    if(f.contains(document.activeElement)) return;
+    f.innerHTML='';
+    DOSES.forEach(d=>{
+      const row=document.createElement('div');row.className='field';
+      row.innerHTML='<span>'+d.label+'</span><span style="display:flex;gap:10px;align-items:center"><input type="time" value="'+todayTime(d.id,now)+'"><label class="toggle"><input type="checkbox"'+(skipped(d.id,now)?' checked':'')+'> auslassen</label></span>';
+      const [t,cb]=row.querySelectorAll('input');
+      t.onchange=()=>{if(/^\d\d:\d\d$/.test(t.value)){setOver(new Date(),'times',d.id,t.value===planTime(d.id)?null:t.value);delete mem.snooze[d.id];save();render()}};
+      cb.onchange=()=>{setOver(new Date(),'skip',d.id,cb.checked||null);render()};
+      f.appendChild(row);
+    });
+  }
+  document.getElementById('resetToday').onclick=()=>{delete mem.over[dk(new Date())];save();render()};
+
+  function renderPlan(){
+    const f=document.getElementById('planFields');f.innerHTML='';
+    DOSES.forEach(d=>{
+      const row=document.createElement('div');row.className='field';
+      row.innerHTML='<span>'+d.label+' (normal)</span><input type="time" value="'+planTime(d.id)+'">';
+      const t=row.querySelector('input');
+      t.onchange=()=>{if(/^\d\d:\d\d$/.test(t.value)){mem.times[d.id]=t.value;save();render()}};
+      f.appendChild(row);
+    });
+    const md=document.getElementById('mealDelay');md.value=String(mem.mealDelay);md.onchange=()=>{mem.mealDelay=+md.value;save()};
+    const ng=document.getElementById('nag');ng.value=mem.nag;ng.onchange=()=>{mem.nag=ng.value;save();render()};
+    const mu=document.getElementById('music');mu.value=mem.music;mu.onchange=()=>{const v=mu.value.trim();mem.music=/^https?:\/\//.test(v)?v:'';mu.value=mem.music;save();render()};
+  }
+
+  function renderHist(now){
+    const h=document.getElementById('hist');h.innerHTML='';
+    for(let i=6;i>=0;i--){
+      const d=new Date(now);d.setDate(d.getDate()-i);
+      const l=mem.log[dk(d)]||{}, sk=(mem.over[dk(d)]||{}).skip||{};
+      const el=document.createElement('div');el.className='day';
+      el.innerHTML=(i===0?'Heute':d.toLocaleDateString('de-DE',{weekday:'short'}))+'<div class="dots">'+DOSES.map(x=>'<span class="dot'+(l[x.id]?' on':sk[x.id]?' sk':'')+'"></span>').join('')+'</div>';
+      h.appendChild(el);
+    }
+  }
+
+  // tidy: drop overrides older than 14 days
+  (function(){const cut=dk(new Date(Date.now()-14*864e5));Object.keys(mem.over).forEach(k=>{if(k<cut)delete mem.over[k]});save()})();
+
+  renderPlan();render();
+  setInterval(render,15000);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
+})();
+</script>
+</body>
+</html>
